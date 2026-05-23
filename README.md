@@ -1,42 +1,64 @@
-# Enterprise Multi-Modal Product Search Engine
+# 🛍️ Enterprise Multi-Modal Product Search Engine
 
-A production-grade, high-performance cross-modal (Text-to-Image) retrieval system capable of executing semantic search vectors across a catalog of 44,000+ retail fashion assets. This architecture bypasses traditional keyword matching by projecting both natural language queries and product imagery into a shared high-dimensional vector space.
+An end-to-end AI-powered retail discovery platform utilizing a **CLIP Dual-Encoder Architecture** and a high-performance vector index to enable semantic, natural language searches over a catalog of **44,419 fashion assets**.
 
-## 🛠️ Tech Stack & Core Dependencies
-* **Core Language:** Python 3.11+
-* **Deep Learning Framework:** PyTorch & Hugging Face Transformers (`CLIP-ViT-Base-Patch32`)
-* **Vector Database:** ChromaDB (Configured for native Cosine Similarity matching)
-* **Application Layer:** FastAPI (Asynchronous microservice router)
-* **Web Gateway Gateway:** Uvicorn
+The project is engineered as a decoupled microservices architecture featuring a high-performance asynchronous retrieval API and an interactive, real-time visual web dashboard.
 
-## 🏗️ System Architecture & Data Flow
+---
 
-1. **Ingestion Pipeline:** Raw catalog images are loaded via Pillow, mapped through the CLIP visual transformer to extract 512-dimensional coordinates, geometrically L2-normalized, and upserted into a persistent local ChromaDB collection alongside structured metadata.
-2. **Query Processing Layer:** Natural language text input strings are tokenized and processed via the CLIP text encoder to generate matching search coordinates.
-3. **Vector Similarity Search:** ChromaDB executes an optimized HNSW index lookup using Cosine Distance space calculations to return the Top-K closest product matches.
-4. **Media Streaming Delivery:** FastAPI utilizes asynchronous file operations (`aiofiles` and `FileResponse`) to stream physical high-resolution retail assets straight to the client browser via unified endpoints.
+## 🏗️ System Architecture & Workflow
 
-## 🚀 Production Engineering Highlights
+1. **Ingestion & Embedding Pipeline:** Processes 44k+ multi-modal catalog items. Text descriptions and images are projected into a unified 512-dimensional vector space using the pre-trained `CLIP-ViT-Base-Patch32` transformer model.
+2. **L2 Normalization & Indexing:** All generated embeddings undergo rigorous $L2$ normalization to ensure mathematically precise cosine similarity calculations inside a local **ChromaDB** vector database.
+3. **Asynchronous Serving Layer:** A highly efficient **FastAPI** backend exposes production endpoints for semantic query vectorization, top-$K$ vector proximity lookups, and direct binary image streaming from disk.
+4. **Interactive Dashboard Layout:** A responsive **Streamlit** user interface captures human queries, communicates via REST protocols with the backend microservice, parses the nested metadata schema, and dynamically renders product assets in a clean grid layout.
 
-### 1. Geometric L2 Vector Normalization
-To guarantee flawless accuracy under Cosine Distance search configurations, all coordinate arrays are explicitly normalized to a unit length of 1.0 using L2 geometry routines before being indexed:
+---
 
-$$\|\mathbf{v}\|_2 = \sqrt{\sum_{i=1}^{n} v_i^2}$$
+## 🛠️ Tech Stack & Core Libraries
 
-### 2. High-Performance Asynchronous I/O
-The API layer leverages FastAPI's non-blocking `async` runtime alongside `aiofiles`. This keeps the microservice highly responsive, allowing it to handle concurrent user search requests without locking up main thread CPU cycles while waiting on disk reads.
+* **Deep Learning Framework:** PyTorch, Hug Face `transformers` (CLIP)
+* **Vector Database:** ChromaDB (HNSW Graph Engine)
+* **Backend Framework:** FastAPI, Uvicorn (Asynchronous I/O processing)
+* **Frontend Dashboard:** Streamlit, Requests
+* **DevOps Infrastructure:** Docker, Docker Compose (Multi-container orchestration blueprints included)
 
-## 📂 Project Structure
-```text
-GenAI RAG/
-│
-├── app/
-│   ├── __init__.py
-│   ├── config.py       # Centralized directory paths & hyperparameter configurations
-│   ├── engine.py       # CLIP neural network inference and normalization class
-│   ├── database.py     # ChromaDB collection handling and data ingestion loops
-│   └── main.py         # Unified FastAPI application routing layer
-│
-├── Phase1_Exploration.ipynb  # Initial prototyping notebook
-├── .gitignore          # Safeguards data files from repository commits
-└── README.md           # Professional portfolio documentation
+---
+
+## 🚀 How to Run the System Natively
+
+### Prerequisites
+Ensure you have Python 3.10+ installed and your fashion dataset downloaded locally.
+
+### 1. Initialize the Environment & Dependencies
+Clone the repository, navigate to the project root, create your configuration files, and install the required packages:
+```bash
+pip install -r requirements.txt
+
+2. Boot the FastAPI Backend Service
+Launch the asynchronous API server using Uvicorn. This layer initializes the CLIP model, loads weights into memory, and mounts your local ChromaDB vector index directory:
+
+Bash
+uvicorn app.main:app --reload
+The interactive API documentation panel will be accessible live at http://127.0.0.1:8000/docs.
+
+3. Launch the Streamlit Frontend Interface
+Open a separate terminal window or split your current terminal view, and execute the Streamlit engine to boot up your visual search dashboard:
+
+Bash
+streamlit run app_ui.py
+The web dashboard will automatically open in your browser interface at http://localhost:8501.
+
+🐋 Enterprise Containerization Blueprints
+For production-grade cloud deployments (AWS, GCP, Azure), the project contains built-in Docker configuration files to eliminate environment mismatches entirely.
+
+Dockerfile.backend: Packages the PyTorch, C++ build dependencies, and FastAPI execution stack into a lean, isolated Linux environment.
+
+Dockerfile.frontend: Builds a lightweight container dedicated entirely to serving the Streamlit dashboard layout.
+
+docker-compose.yml: Network-orchestrates both containers simultaneously over a secure virtual bridge network, mapping the local image cache cleanly via disk volumes.
+
+To deploy the entire multi-container microservice ecosystem with a single command:
+
+Bash
+docker compose up --build
