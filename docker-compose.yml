@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/workspace/chroma_db
+      # Maps your local Windows Kaggle cache directory straight into the Docker container
+      - "C:\\Users\\hp\\.cache\\kagglehub\\datasets\\paramaggarwal\\fashion-product-images-small\\versions\\1\\images:/workspace/images"
+    environment:
+      - CHROMA_DB_DIR=/workspace/chroma_db
+      - IMAGES_DIR=/workspace/images
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
