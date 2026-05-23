@@ -21,31 +21,46 @@ if st.button("Search Catalog", type="primary"):
     else:
         with st.spinner("Vectorizing query and exploring high-dimensional embedding space..."):
             try:
-                # 1. Make call to the FastAPI search endpoint
-                response = requests.post(f"{BACKEND_URL}/search", json={"query": query, "top_k": top_k})
+                # 1. Make call to the FastAPI search endpoint with mapped parameter keys
+                response = requests.get(f"{BACKEND_URL}/search", params={"q": query, "limit": top_k})
                 
                 if response.status_code == 200:
-                    results = response.json() # Expecting a list of item dictionaries
+                    api_response = response.json()
+                    
+                    # Extract the list of result dictionaries from the top-level key
+                    results = api_response.get("results", [])
                     
                     if not results:
                         st.info("No matching items found in the vector index.")
                     else:
                         st.success(f"Successfully retrieved top {len(results)} matches!")
                         
-                        # 2. Build a responsive multi-column grid layout for images
+                        # Build a clean, responsive 4-column layout grid
                         cols = st.columns(4)
                         for idx, item in enumerate(results):
-                            prod_id = item.get("product_id")
-                            prod_name = item.get("product_name", "Unknown Product")
-                            distance = item.get("distance", 0.0)
+                            # Clean Extraction: Safely grab the product_id from the inner dictionary
+                            prod_id = str(item.get("product_id", ""))
                             
-                            # Calculate column assignment
+                            # Grab details for beautiful display captions
+                            details = item.get("details", {})
+                            prod_name = details.get("product_name", "Unknown Product")
+                            gender = details.get("gender_tag", "Unisex")
+                            score = item.get("confidence_score", "0.0%")
+                            
+                            # Calculate exactly which column column this item belongs to
                             col_idx = idx % 4
                             with cols[col_idx]:
-                                # Call our live binary image stream endpoint
+                                # Route directly to your live FastAPI binary stream endpoint
                                 img_url = f"{BACKEND_URL}/product-image/{prod_id}"
-                                st.image(img_url, use_column_width=True)
-                                st.caption(f"**ID:** {prod_id}\n\n**Dist:** {distance:.4f}")
+                                
+                                # Render the image cleanly using container width rules
+                                st.image(img_url, use_container_width=True)
+                                
+                                # Render rich metadata cards underneath each asset
+                                st.markdown(f"### ID: {prod_id}")
+                                st.markdown(f"**Match:** `{score}`")
+                                st.markdown(f"*{prod_name}*")
+                                st.caption(f"Tag: {gender}")
                 else:
                     st.error(f"Backend API returned an error status: {response.status_code}")
                     
