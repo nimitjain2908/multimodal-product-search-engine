@@ -1,0 +1,15 @@
+# Python caches
+__pycache__/
+*.pyc
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+
+# Project Specific Data Blocks (Crucial to exclude)
+chroma_db/
+warehouse_ids.npy
+warehouse_vectors.npy
